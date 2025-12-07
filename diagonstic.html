@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FlyDoc — Instant Diagnostics</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="index.html" class="logo">
+        <img src="Fly Doc Service Industry Logo.png" alt="logo" class="logo-img"/>
+        <span class="logo-text">FlyDoc</span>
+      </a>
+      <ul class="nav-menu">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="index.html#features" class="nav-link">Features</a></li>
+        <li><a href="diagnostic.html" class="nav-link">Diagnostics</a></li>
+        <li><a href="index.html#about" class="nav-link">About</a></li>
+        <li><a href="index.html#contact" class="nav-link">Contact</a></li>
+      </ul>
+      <div class="hamburger"><span class="bar"></span><span class="bar"></span><span class="bar"></span></div>
+    </div>
+  </nav>
+
+  <section class="section-header" style="padding-top:120px;">
+    <h2 class="section-title">Instant Patient Diagnostics</h2>
+    <p class="section-subtitle">Enter simple vitals: Blood Pressure, Blood Sugar, and Temperature — get instant condition detection and recommended emergency actions.</p>
+  </section>
+
+  <section style="padding: 30px 0 80px;">
+    <div class="container">
+      <div class="feature-card" style="max-width:900px;margin:0 auto;">
+        <h3 style="margin-bottom:16px;">Patient Diagnostics Panel</h3>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr; gap:18px;">
+          <div>
+            <label><strong>1) Blood Pressure (BP)</strong></label>
+            <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
+              <input id="bpSystolic" type="number" placeholder="Systolic (e.g. 120)" />
+              <input id="bpDiastolic" type="number" placeholder="Diastolic (e.g. 80)" />
+            </div>
+            <small class="hint">Units: mmHg</small>
+          </div>
+
+          <div>
+            <label><strong>2) Blood Sugar (Glucose)</strong></label>
+            <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
+              <input id="sugarValue" type="number" placeholder="Glucose (mg/dL)" />
+              <select id="sugarType" style="padding:10px;">
+                <option value="random">Random</option>
+                <option value="fasting">Fasting</option>
+                <option value="postprandial">Postprandial</option>
+              </select>
+            </div>
+            <small class="hint">Typical units: mg/dL</small>
+          </div>
+
+          <div>
+            <label><strong>3) Body Temperature</strong></label>
+            <div style="margin-top:8px;">
+              <input id="temperature" type="number" step="0.1" placeholder="Temperature (°C)" />
+            </div>
+            <small class="hint">Use °C (you can convert if needed)</small>
+          </div>
+
+          <div>
+            <label><strong>Patient Notes / Symptoms</strong></label>
+            <div style="margin-top:8px;">
+              <textarea id="symptoms" rows="3" placeholder="Optional: short notes (dizziness, sweating, breathlessness)"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px; display:flex; gap:12px;">
+          <button id="analyzeBtn" class="btn btn-primary">Analyze</button>
+          <button id="clearBtn" class="btn btn-secondary">Clear</button>
+        </div>
+
+        <div id="resultCard" style="margin-top:22px; display:none;">
+          <div class="feature-card" style="padding:18px;">
+            <h4>Analysis Result</h4>
+            <div id="resultSummary" style="margin-top:8px;"></div>
+
+            <hr style="margin:12px 0;" />
+
+            <h5>Recommended Immediate Actions</h5>
+            <ul id="recommendedActions"></ul>
+
+            <h5 style="margin-top:12px;">Suggested (Common/OTC) Interventions</h5>
+            <div id="medicineSuggestions"></div>
+
+            <p style="margin-top:12px; font-size:0.9rem; color:#6c757d;">
+              <strong>Disclaimer:</strong> FlyDoc Diagnostics provides rule-based guidance for triage/early actions only. This is not a substitute for professional medical assessment. For any alarming values or worsening symptoms, contact emergency services or a licensed clinician immediately.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer" style="padding-top:10px;">
+    <div class="container">
+      <div class="footer-content" style="grid-template-columns:1fr;">
+        <div>
+          <p style="color:#adb5bd;">FlyDoc Diagnostics · For demonstration and triage support. © 2025</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function(){
+      const analyzeBtn = document.getElementById('analyzeBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const resultCard = document.getElementById('resultCard');
+      const resultSummary = document.getElementById('resultSummary');
+      const recommendedActions = document.getElementById('recommendedActions');
+      const medicineSuggestions = document.getElementById('medicineSuggestions');
+
+      function resetResult(){
+        resultSummary.innerHTML = '';
+        recommendedActions.innerHTML = '';
+        medicineSuggestions.innerHTML = '';
+        resultCard.style.display = 'none';
+      }
+
+      function showResult(){
+        resultCard.style.display = 'block';
+      }
+
+      function analyze(){
+        resetResult();
+        const systolic = parseFloat(document.getElementById('bpSystolic').value);
+        const diastolic = parseFloat(document.getElementById('bpDiastolic').value);
+        const sugar = parseFloat(document.getElementById('sugarValue').value);
+        const sugarType = document.getElementById('sugarType').value;
+        const temp = parseFloat(document.getElementById('temperature').value);
+        const symptoms = (document.getElementById('symptoms').value || '').trim();
+
+        const lines = [];
+        const actions = [];
+        const meds = [];
+
+        if (!isNaN(systolic) && !isNaN(diastolic)) {
+          if (systolic >= 180 || diastolic >= 120) {
+            lines.push(`<strong>BP:</strong> Hypertensive Crisis suspected (Systolic ${systolic} / Diastolic ${diastolic}).`);
+            actions.push('Call emergency services immediately — hypertensive crisis can be life-threatening.');
+            actions.push('Keep patient seated, calm, monitor airway & breathing.');
+          } else if (systolic >= 140 || diastolic >= 90) {
+            lines.push(`<strong>BP:</strong> High BP (Hypertension) — Systolic ${systolic} / Diastolic ${diastolic}.`);
+            actions.push('Arrange rapid medical assessment; avoid heavy physical exertion.');
+            actions.push('If patient is known hypertensive and has prescribed meds, follow previously advised protocol by their clinician.');
+          } else if (systolic < 90 || diastolic < 60) {
+            lines.push(`<strong>BP:</strong> Low BP (Hypotension) — Systolic ${systolic} / Diastolic ${diastolic}.`);
+            actions.push('Lay the patient down with legs elevated if tolerated; monitor consciousness.');
+            actions.push('Give small sips of water if conscious and not vomiting; seek medical help.');
+          } else {
+            lines.push(`<strong>BP:</strong> Normal — Systolic ${systolic} / Diastolic ${diastolic}.`);
+          }
+        } else {
+          lines.push('<strong>BP:</strong> Not provided or incomplete.');
+        }
+
+        if (!isNaN(sugar)) {
+          if (sugarType === 'fasting') {
+            if (sugar < 70) {
+              lines.push(`<strong>Glucose (fasting):</strong> Low (${sugar} mg/dL) — Hypoglycemia suspected.`);
+              actions.push('If patient conscious & can swallow: give quick sugar (oral glucose gel or 15–20 g simple carbohydrate such as a glucose tablet or ~4 oz fruit juice). Re-check.');
+              meds.push('Immediate carbohydrate (oral) like glucose gel or sugary drink.');
+            } else if (sugar >= 126) {
+              lines.push(`<strong>Glucose (fasting):</strong> High (${sugar} mg/dL) — Possible diabetes range.`);
+              actions.push('Arrange medical assessment; encourage hydration and monitoring.');
+            } else {
+              lines.push(`<strong>Glucose (fasting):</strong> Normal (${sugar} mg/dL).`);
+            }
+          } else if (sugarType === 'postprandial' || sugarType === 'random') {
+            if (sugar < 70) {
+              lines.push(`<strong>Glucose (${sugarType}):</strong> Low (${sugar} mg/dL) — Hypoglycemia suspected.`);
+              actions.push('If conscious, give quick sugar (oral). Monitor and seek help if not improving.');
+              meds.push('Immediate carbohydrate (oral) like glucose gel or sugary drink.');
+            } else if (sugar >= 200) {
+              lines.push(`<strong>Glucose (${sugarType}):</strong> High (${sugar} mg/dL).`);
+              actions.push('High glucose — seek medical assessment; if patient is dehydrated or confused, call emergency services.');
+            } else {
+              lines.push(`<strong>Glucose (${sugarType}):</strong> Within expected range (${sugar} mg/dL).`);
+            }
+          }
+        } else {
+          lines.push('<strong>Glucose:</strong> Not provided.');
+        }
+
+        if (!isNaN(temp)) {
+          if (temp >= 41.0) {
+            lines.push(`<strong>Temperature:</strong> Very high fever (${temp} °C) — dangerous level.`);
+            actions.push('Call emergency services immediately; cool patient using tepid sponging if trained.');
+            meds.push('Immediate medical review required; antipyretic may be given if instructed by clinician.');
+          } else if (temp >= 39.0) {
+            lines.push(`<strong>Temperature:</strong> High fever (${temp} °C).`);
+            actions.push('Give antipyretic (e.g., paracetamol) as per package instructions for age/weight if no contraindication. Encourage fluids and monitoring.');
+            meds.push('Paracetamol (follow dosing instructions).');
+          } else if (temp >= 37.5) {
+            lines.push(`<strong>Temperature:</strong> Mild fever (${temp} °C).`);
+            actions.push('Monitor temperature, give fluids, rest, consider antipyretic if patient uncomfortable.');
+            meds.push('Paracetamol (if needed).');
+          } else {
+            lines.push(`<strong>Temperature:</strong> Normal (${temp} °C).`);
+          }
+        } else {
+          lines.push('<strong>Temperature:</strong> Not provided.');
+        }
+
+        const combinedWarnings = [];
+        if (!isNaN(systolic) && (systolic >= 180)) combinedWarnings.push('very high BP');
+        if (!isNaN(diastolic) && (diastolic >= 120)) combinedWarnings.push('very high BP');
+        if (!isNaN(sugar) && sugar < 54) combinedWarnings.push('severe hypoglycemia');
+        if (!isNaN(temp) && temp >= 41.0) combinedWarnings.push('very high fever');
+
+        if (combinedWarnings.length) {
+          actions.unshift('ALERT: ' + combinedWarnings.join(', ') + ' — call emergency services immediately.');
+        }
+
+        const sLower = (symptoms || '').toLowerCase();
+        if (sLower.includes('unconscious') || sLower.includes('not breathing') || sLower.includes('chest pain') || sLower.includes('severe shortness')) {
+          actions.unshift('Patient has red-flag symptoms (loss of consciousness, severe breathing difficulty, chest pain) — call emergency services NOW.');
+        }
+
+        resultSummary.innerHTML = lines.map(l => `<div style="margin-bottom:6px;">${l}</div>`).join('');
+        if (actions.length) {
+          actions.forEach(a => {
+            const li = document.createElement('li');
+            li.innerHTML = a;
+            recommendedActions.appendChild(li);
+          });
+        } else {
+          const li = document.createElement('li');
+          li.textContent = 'No immediate emergency actions detected. Monitor and consult a clinician if in doubt.';
+          recommendedActions.appendChild(li);
+        }
+
+        if (meds.length) {
+          medicineSuggestions.innerHTML = meds.map(m => `<div>• ${m}</div>`).join('');
+        } else {
+          medicineSuggestions.innerHTML = '<div>No OTC medications specifically recommended from inputs. Seek clinician advice for prescriptions.</div>';
+        }
+
+        showResult();
+      }
+
+      analyzeBtn.addEventListener('click', analyze);
+      clearBtn.addEventListener('click', function(){
+        document.getElementById('bpSystolic').value = '';
+        document.getElementById('bpDiastolic').value = '';
+        document.getElementById('sugarValue').value = '';
+        document.getElementById('temperature').value = '';
+        document.getElementById('symptoms').value = '';
+        resetResult();
+      });
+
+    })();
+  </script>
+</body>
+</html>
+    
